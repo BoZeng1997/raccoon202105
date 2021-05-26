@@ -11,6 +11,10 @@
 #include <boost/math/distributions.hpp>
 #include <ctime>
 #include <random>
+// output eta for inverse construction
+#include <iostream>
+#include <fstream>
+#include <vector>
 
 // Bring in everything from the libMesh namespace
 using namespace libMesh;
@@ -44,14 +48,14 @@ main(int argc, char ** argv)
 
   // Read the mesh
   Mesh mesh(init.comm());
-  mesh.read("basis.e");
+  mesh.read("/hpc/home/bz75/projects/raccoon/benchmarks/klexpansion/facterize/basis_PE_L49P100_N10.e");
 
   // Read the eigenpairs
   std::vector<Real> eigvals;
   std::vector<std::vector<Real>> eigvecs;
 
   ExodusII_IO basis(mesh);
-  basis.read("basis.e");
+  basis.read("/hpc/home/bz75/projects/raccoon/benchmarks/klexpansion/facterize/basis_PE_L49P100_N10.e");
   ExodusII_IO_Helper & basis_helper = basis.get_exio_helper();
   for (int i = 1; i < basis.get_num_time_steps(); i++)
   {
@@ -73,16 +77,16 @@ main(int argc, char ** argv)
 
   // transform to marginal Gamma fields
   std::vector<Real> Gc;
-  std::vector<Real> psic;
-  compute_correlated_Gamma_fields(Xi_1, Xi_2, Gc, 8e-4, 0.03, psic, 3e-5, 0.03, 0);
+  std::vector<Real> E;
+  compute_correlated_Gamma_fields(Xi_1, Xi_2, Gc, 8e-4, 0.03, E, 4.0, 0.03, 0);
 
   // write random field
   ExodusII_IO fields(mesh);
-  fields.write("fields.e");
+  fields.write("fields_PE_L49P100_Gc_E_r0_N10_set000.e");
   ExodusII_IO_Helper & fields_helper = fields.get_exio_helper();
-  fields_helper.initialize_nodal_variables({"Gc", "psic"});
+  fields_helper.initialize_nodal_variables({"Gc", "E"});
   fields_helper.write_nodal_values(1, Gc, 1);
-  fields_helper.write_nodal_values(2, psic, 1);
+  fields_helper.write_nodal_values(2, E, 1);
 
   return EXIT_SUCCESS;
 }
@@ -96,9 +100,34 @@ sample_gaussian(const std::vector<Real> & eigvals,
   std::vector<Real> Xi(ndof);
   std::normal_distribution<Real> distribution(0.0, 1.0);
 
+  // std::fstream eta0file;
+  // eta0file.open("eta0.csv");
+  // Real a;
+  // std::vector<Real> eta0;
+  // while (eta0file>>a)
+  // {
+  //   eta0.push_back(a);
+  //   Real a;
+  // }
+  // eta0file.close();
+
+  // std::ofstream myfile;
+  // myfile.open("etas.csv")
+
   for (unsigned int i = 0; i < eigvals.size(); i++)
   {
-    Real eta = distribution(generator);
+    Real eta;
+    if(i<0)
+    {
+      eta = eta0[i];
+    }
+    else
+    {
+      eta = distribution(generator);
+    }
+    // Real eta = distribution(generator);
+    // myfile << eta <<"\n";
+
     for (unsigned int j = 0; j < ndof; j++)
       Xi[j] += std::sqrt(eigvals[i]) * eta * eigvecs[i][j];
   }

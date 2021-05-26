@@ -113,19 +113,19 @@
 
 [Materials]
   [energy_release_rate]
-    type = ParsedMaterial
+    type = ADParsedMaterial
     f_name = 'energy_release_rate'
     args = 'Gc'
     function = 'Gc'
   []
   [critial_fracture_energy]
-    type = ParsedMaterial
+    type = ADParsedMaterial
     f_name = 'critical_fracture_energy'
     args = 'psic'
     function = 'psic'
   []
   [length_scale]
-    type = GenericConstantMaterial
+    type = ADGenericConstantMaterial
     prop_names = 'phase_field_regularization_length'
     prop_values = '0.5'
   []
@@ -134,7 +134,7 @@
     d = 'd'
   []
   [fracture_properties]
-    type = FractureMaterial
+    type = ADFractureMaterial
     local_dissipation_norm = 8/3
     constant_in_time = false
   []
